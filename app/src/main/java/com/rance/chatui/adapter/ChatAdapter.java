@@ -1,10 +1,11 @@
 package com.rance.chatui.adapter;
 
 import android.os.Handler;
-import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.rance.chatui.adapter.holder.BaseViewHolder;
 import com.rance.chatui.adapter.holder.ChatAcceptViewHolder;

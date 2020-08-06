@@ -1,7 +1,8 @@
 package com.rance.chatui.adapter.holder;
 
-import android.support.v7.widget.RecyclerView;
 import android.view.View;
+
+import androidx.recyclerview.widget.RecyclerView;
 
 /**
  * Created by chengz

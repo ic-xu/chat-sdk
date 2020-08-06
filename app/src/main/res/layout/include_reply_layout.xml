@@ -5,10 +5,10 @@
     android:clickable="true"
     android:orientation="vertical">
 
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1px"
-        android:background="@color/divider_line" />
+<!--    <View-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="1px"-->
+<!--        android:background="@color/divider_line" />-->
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -54,7 +54,8 @@
             android:paddingLeft="@dimen/content_horizontal_margin"
             android:paddingRight="@dimen/content_horizontal_margin"
             android:text="按住说话"
-            android:visibility="gone" />
+            android:visibility="gone"
+            />
 
         <ImageView
             android:id="@+id/emotion_button"
@@ -88,10 +89,10 @@
 
     </LinearLayout>
 
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1px"
-        android:background="@color/divider_line" />
+<!--    <View-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="1px"-->
+<!--        android:background="@color/divider_line" />-->
 
     <RelativeLayout
         android:id="@+id/emotion_layout"
@@ -99,7 +100,8 @@
         android:layout_height="0dp"
         android:background="@color/bg_content"
         android:orientation="vertical"
-        android:visibility="gone">
+        android:visibility="gone"
+        >
 
         <com.rance.chatui.widget.NoScrollViewPager
             android:id="@+id/viewpager"

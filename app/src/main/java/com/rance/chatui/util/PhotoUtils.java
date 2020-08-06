@@ -6,7 +6,6 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
 import android.provider.MediaStore;
-import android.support.v4.app.Fragment;
 import android.util.Log;
 
 import com.rance.chatui.base.BaseFragment;

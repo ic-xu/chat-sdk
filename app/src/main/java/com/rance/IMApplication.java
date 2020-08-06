@@ -1,4 +1,4 @@
-package com.rance.chatui.base;
+package com.rance;
 
 import android.app.Application;
 import android.content.Context;
@@ -8,8 +8,8 @@ import android.util.DisplayMetrics;
  * 作者：Rance on 2016/12/20 16:49
  * 邮箱：rance935@163.com
  */
-public class MyApplication extends Application {
-    private static MyApplication mInstance;
+public class IMApplication extends Application {
+    private static IMApplication mInstance;
     public static Context mContext;
     /**
      * 屏幕宽度

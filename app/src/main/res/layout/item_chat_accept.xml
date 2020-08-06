@@ -45,6 +45,7 @@
             android:gravity="left|center_vertical"
             android:minHeight="48dp"
             android:minWidth="120dp"
+            android:layout_marginRight="50dp"
             android:orientation="horizontal"
             app:angle="4dp"
             app:arrowHeight="10dp"

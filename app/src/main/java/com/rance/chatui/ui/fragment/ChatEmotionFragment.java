@@ -1,22 +1,23 @@
 package com.rance.chatui.ui.fragment;
 
 import android.os.Bundle;
-import android.support.annotation.Nullable;
-import android.support.v4.view.ViewPager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.GridView;
 import android.widget.LinearLayout;
 
+import androidx.annotation.Nullable;
+import androidx.viewpager.widget.ViewPager;
+
 import com.rance.chatui.R;
 import com.rance.chatui.adapter.EmotionGridViewAdapter;
 import com.rance.chatui.adapter.EmotionPagerAdapter;
 import com.rance.chatui.base.BaseFragment;
-import com.rance.chatui.base.MyApplication;
-import com.rance.chatui.util.Utils;
+import com.rance.IMApplication;
 import com.rance.chatui.util.EmotionUtils;
 import com.rance.chatui.util.GlobalOnItemClickManagerUtils;
+import com.rance.chatui.util.Utils;
 import com.rance.chatui.widget.IndicatorView;
 
 import java.util.ArrayList;
@@ -78,7 +79,7 @@ public class ChatEmotionFragment extends BaseFragment {
      */
     private void initEmotion() {
         // 获取屏幕宽度
-        int screenWidth = MyApplication.screenWidth;
+        int screenWidth = IMApplication.screenWidth;
         // item的间距
         int spacing = Utils.dp2px(getActivity(), 12);
         // 动态计算item的宽度和高度

@@ -6,20 +6,22 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Rect;
 import android.os.Build;
-import android.support.v4.view.ViewPager;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewTreeObserver;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
+import androidx.annotation.RequiresApi;
+import androidx.viewpager.widget.ViewPager;
 
 import com.rance.chatui.R;
 import com.rance.chatui.enity.MessageInfo;
@@ -28,7 +30,7 @@ import com.rance.chatui.util.Constants;
 import com.rance.chatui.util.PopupWindowFactory;
 import com.rance.chatui.util.Utils;
 
-import org.greenrobot.eventbus.EventBus;
+import org.simple.eventbus.EventBus;
 
 /**
  * 作者：Rance on 2016/12/13 15:19
@@ -36,7 +38,6 @@ import org.greenrobot.eventbus.EventBus;
  * 输入框管理类
  */
 public class EmotionInputDetector {
-    private static final String TAG = "EmotionInputDetector";
     private static final String SHARE_PREFERENCE_NAME = "com.dss886.emotioninputdetector";
     private static final String SHARE_PREFERENCE_TAG = "soft_input_height";
 
@@ -295,6 +296,8 @@ public class EmotionInputDetector {
     }
 
     public EmotionInputDetector build() {
+        mActivity.getWindow().getDecorView().getViewTreeObserver().addOnGlobalLayoutListener(mGlobalLayoutListener);
+
         mActivity.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN |
                 WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
         hideSoftInput();
@@ -351,7 +354,6 @@ public class EmotionInputDetector {
             softInputHeight = sp.getInt(SHARE_PREFERENCE_TAG, 768);
         }
         hideSoftInput();
-        Log.e(TAG, "showEmotionLayout: ->" + softInputHeight );
         mEmotionLayout.getLayoutParams().height = softInputHeight;
         mEmotionLayout.setVisibility(View.VISIBLE);
     }
@@ -366,7 +368,6 @@ public class EmotionInputDetector {
     }
 
     private void lockContentHeight() {
-        Log.e(TAG, "lockContentHeight: ->" + mContentView.getHeight());
         LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) mContentView.getLayoutParams();
         params.height = mContentView.getHeight();
         params.weight = 0.0F;
@@ -392,7 +393,7 @@ public class EmotionInputDetector {
     }
 
     public void hideSoftInput() {
-        mInputManager.hideSoftInputFromWindow(mEditText.getWindowToken(), 0);
+            mInputManager.hideSoftInputFromWindow(mEditText.getWindowToken(), 0);
     }
 
     private boolean isSoftInputShown() {
@@ -400,23 +401,35 @@ public class EmotionInputDetector {
     }
 
     private int getSupportSoftInputHeight() {
-        Rect r = new Rect();
-        mActivity.getWindow().getDecorView().getWindowVisibleDisplayFrame(r);
-        int screenHeight = mActivity.getWindow().getDecorView().getRootView().getHeight();
-        int softInputHeight = screenHeight - r.bottom;
-        if (Build.VERSION.SDK_INT >= 20) {
-            // When SDK Level >= 20 (Android L), the softInputHeight will contain the height of softButtonsBar (if has)
-            softInputHeight = softInputHeight - getSoftButtonsBarHeight();
-        }
-        if (softInputHeight < 0) {
-            Log.w("EmotionInputDetector", "Warning: value of softInputHeight is below zero!");
-        }
-        if (softInputHeight > 0) {
-            Log.e(TAG, "getSupportSoftInputHeight: ->" + softInputHeight );
-            sp.edit().putInt(SHARE_PREFERENCE_TAG, softInputHeight).apply();
-        }
-        return softInputHeight;
+        if(0!=softKeyboardHeight)
+            sp.edit().putInt(SHARE_PREFERENCE_TAG, softKeyboardHeight);
+        return softKeyboardHeight;
     }
+
+
+    //记录原始窗口高度
+    private int mWindowHeight = 0;
+
+    private int softKeyboardHeight = 0;
+
+    private ViewTreeObserver.OnGlobalLayoutListener mGlobalLayoutListener = new ViewTreeObserver.OnGlobalLayoutListener() {
+        @Override
+        public void onGlobalLayout() {
+            Rect r = new Rect();
+            //获取当前窗口实际的可见区域
+            mActivity.getWindow().getDecorView().getWindowVisibleDisplayFrame(r);
+            int height = r.height();
+            if (mWindowHeight == 0) {
+                //一般情况下，这是原始的窗口高度
+                mWindowHeight = height;
+            } else {
+                if (mWindowHeight != height) {
+                    //两次窗口高度相减，就是软键盘高度
+                    softKeyboardHeight = mWindowHeight - height;
+                }
+            }
+        }
+    };
 
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
     private int getSoftButtonsBarHeight() {
@@ -430,6 +443,11 @@ public class EmotionInputDetector {
         } else {
             return 0;
         }
+    }
+
+
+    public void destory(){
+        mActivity.getWindow().getDecorView().getViewTreeObserver().removeOnGlobalLayoutListener(mGlobalLayoutListener);
     }
 
 }

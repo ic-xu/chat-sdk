@@ -7,17 +7,18 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.v4.app.Fragment;
-import android.support.v4.content.FileProvider;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.FileProvider;
+import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.labo.kaji.relativepopupwindow.RelativePopupWindow;
 import com.rance.chatui.R;
@@ -36,10 +37,12 @@ import com.rance.chatui.widget.ChatContextMenu;
 import com.rance.chatui.widget.EmotionInputDetector;
 import com.rance.chatui.widget.NoScrollViewPager;
 import com.rance.chatui.widget.StateButton;
+import com.rance.im.BaseMessage;
+import com.rance.im.netty.NettyTcpClient;
 
-import org.greenrobot.eventbus.EventBus;
-import org.greenrobot.eventbus.Subscribe;
-import org.greenrobot.eventbus.ThreadMode;
+import org.simple.eventbus.EventBus;
+import org.simple.eventbus.Subscriber;
+import org.simple.eventbus.ThreadMode;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -88,15 +91,15 @@ public class IMActivity extends AppCompatActivity {
     }
 
     private void findViewByIds() {
-        chatList = (RecyclerView) findViewById(R.id.chat_list);
-        emotionVoice = (ImageView) findViewById(R.id.emotion_voice);
-        editText = (EditText) findViewById(R.id.edit_text);
-        voiceText = (TextView) findViewById(R.id.voice_text);
-        emotionButton = (ImageView) findViewById(R.id.emotion_button);
-        emotionAdd = (ImageView) findViewById(R.id.emotion_add);
-        emotionSend = (StateButton) findViewById(R.id.emotion_send);
-        emotionLayout = (RelativeLayout) findViewById(R.id.emotion_layout);
-        viewpager = (NoScrollViewPager) findViewById(R.id.viewpager);
+        chatList = findViewById(R.id.chat_list);
+        emotionVoice = findViewById(R.id.emotion_voice);
+        editText = findViewById(R.id.edit_text);
+        voiceText = findViewById(R.id.voice_text);
+        emotionButton = findViewById(R.id.emotion_button);
+        emotionAdd = findViewById(R.id.emotion_add);
+        emotionSend = findViewById(R.id.emotion_send);
+        emotionLayout = findViewById(R.id.emotion_layout);
+        viewpager = findViewById(R.id.viewpager);
     }
 
     private void handleIncomeAction() {
@@ -209,12 +212,8 @@ public class IMActivity extends AppCompatActivity {
             animView.setImageResource(animationRes);
             animationDrawable = (AnimationDrawable) imageView.getDrawable();
             animationDrawable.start();
-            MediaManager.playSound(messageInfos.get(position).getFilepath(), new MediaPlayer.OnCompletionListener() {
-                @Override
-                public void onCompletion(MediaPlayer mp) {
-                    animView.setImageResource(res);
-                }
-            });
+            MediaManager.playSound(messageInfos.get(position).getFilepath(),
+                    mp -> animView.setImageResource(res));
         }
 
         @Override
@@ -245,7 +244,7 @@ public class IMActivity extends AppCompatActivity {
         @Override
         public void onLongClickImage(View view, int position) {
 
-            ChatContextMenu chatContextMenu = new ChatContextMenu(view.getContext(),messageInfos.get(position));
+            ChatContextMenu chatContextMenu = new ChatContextMenu(view.getContext(), messageInfos.get(position));
 //            chatContextMenu.setAnimationStyle();
             chatContextMenu.showOnAnchor(view, RelativePopupWindow.VerticalPosition.ABOVE,
                     RelativePopupWindow.HorizontalPosition.CENTER);
@@ -254,28 +253,28 @@ public class IMActivity extends AppCompatActivity {
 
         @Override
         public void onLongClickText(View view, int position) {
-            ChatContextMenu chatContextMenu = new ChatContextMenu(view.getContext(),messageInfos.get(position));
+            ChatContextMenu chatContextMenu = new ChatContextMenu(view.getContext(), messageInfos.get(position));
             chatContextMenu.showOnAnchor(view, RelativePopupWindow.VerticalPosition.ABOVE,
                     RelativePopupWindow.HorizontalPosition.CENTER);
         }
 
         @Override
         public void onLongClickItem(View view, int position) {
-            ChatContextMenu chatContextMenu = new ChatContextMenu(view.getContext(),messageInfos.get(position));
+            ChatContextMenu chatContextMenu = new ChatContextMenu(view.getContext(), messageInfos.get(position));
             chatContextMenu.showOnAnchor(view, RelativePopupWindow.VerticalPosition.ABOVE,
                     RelativePopupWindow.HorizontalPosition.CENTER);
         }
 
         @Override
         public void onLongClickFile(View view, int position) {
-            ChatContextMenu chatContextMenu = new ChatContextMenu(view.getContext(),messageInfos.get(position));
+            ChatContextMenu chatContextMenu = new ChatContextMenu(view.getContext(), messageInfos.get(position));
             chatContextMenu.showOnAnchor(view, RelativePopupWindow.VerticalPosition.ABOVE,
                     RelativePopupWindow.HorizontalPosition.CENTER);
         }
 
         @Override
         public void onLongClickLink(View view, int position) {
-            ChatContextMenu chatContextMenu = new ChatContextMenu(view.getContext(),messageInfos.get(position));
+            ChatContextMenu chatContextMenu = new ChatContextMenu(view.getContext(), messageInfos.get(position));
             chatContextMenu.showOnAnchor(view, RelativePopupWindow.VerticalPosition.ABOVE,
                     RelativePopupWindow.HorizontalPosition.CENTER);
         }
@@ -321,7 +320,8 @@ public class IMActivity extends AppCompatActivity {
         chatAdapter.addAll(messageInfos);
     }
 
-    @Subscribe(threadMode = ThreadMode.MAIN)
+    //    @Subscribe(threadMode = ThreadMode.MAIN)
+    @Subscriber(mode = ThreadMode.MAIN)
     public void MessageEventBus(final MessageInfo messageInfo) {
         messageInfo.setHeader("http://img.dongqiudi.com/uploads/avatar/2014/10/20/8MCTb0WBFG_thumb_1413805282863.jpg");
         messageInfo.setType(Constants.CHAT_ITEM_TYPE_RIGHT);
@@ -360,7 +360,14 @@ public class IMActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        EventBus.getDefault().removeStickyEvent(this);
+        EventBus.getDefault().removeStickyEvent(IMActivity.class);
         EventBus.getDefault().unregister(this);
+        mDetector.destory();
+    }
+
+
+    //TODO 发送消息到服务器
+    private void sendMessage(BaseMessage.Message msg){
+        NettyTcpClient.getInstance().sendMsg(msg);
     }
 }
