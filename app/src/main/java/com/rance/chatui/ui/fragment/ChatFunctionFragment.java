@@ -30,7 +30,7 @@ import com.rance.chatui.util.Constants;
 import com.rance.chatui.util.FileUtils;
 import com.rance.chatui.util.PhotoUtils;
 
-import org.greenrobot.eventbus.EventBus;
+import org.simple.eventbus.EventBus;
 
 import java.io.File;
 

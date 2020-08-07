@@ -11,7 +11,8 @@
         android:id="@+id/chat_item_date"
         style="@style/text_body"
         android:layout_gravity="center_horizontal"
-        android:visibility="gone" />
+        android:visibility="gone"
+        />
 
     <RelativeLayout
         android:layout_width="match_parent"

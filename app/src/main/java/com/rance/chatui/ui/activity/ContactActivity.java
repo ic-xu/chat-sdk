@@ -128,7 +128,10 @@ public class ContactActivity extends AppCompatActivity implements ContactAdapter
             public void onClick(DialogInterface dialog, int which) {
                 MessageInfo messageInfo = new MessageInfo();
                 messageInfo.setFileType(Constants.CHAT_FILE_TYPE_CONTACT);
-                messageInfo.setObject(imContact);
+                messageInfo.setName(imContact.getName());
+                messageInfo.setSurname(imContact.getSurname());
+                messageInfo.setPhonenumber(imContact.getPhonenumber());
+
                 EventBus.getDefault().post(messageInfo);
                 dialog.dismiss();
                 finish();

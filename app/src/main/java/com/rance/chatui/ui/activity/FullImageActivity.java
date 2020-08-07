@@ -11,7 +11,6 @@ import android.os.Bundle;
 import android.view.View;
 import android.view.ViewTreeObserver;
 import android.view.Window;
-import android.view.WindowManager;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -20,9 +19,9 @@ import com.bumptech.glide.Glide;
 import com.rance.chatui.R;
 import com.rance.chatui.enity.FullImageInfo;
 
-import org.greenrobot.eventbus.EventBus;
-import org.greenrobot.eventbus.Subscribe;
-import org.greenrobot.eventbus.ThreadMode;
+import org.simple.eventbus.EventBus;
+import org.simple.eventbus.Subscriber;
+import org.simple.eventbus.ThreadMode;
 
 
 /**
@@ -58,7 +57,8 @@ public class FullImageActivity extends Activity {
     }
 
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
-    @Subscribe(threadMode = ThreadMode.MAIN, sticky = true) //在ui线程执行
+    @Subscriber(mode = ThreadMode.MAIN)
+//    @Subscribe(threadMode = ThreadMode.MAIN, sticky = true) //在ui线程执行
     public void onDataSynEvent(final FullImageInfo fullImageInfo) {
         final int left = fullImageInfo.getLocationX();
         final int top = fullImageInfo.getLocationY();

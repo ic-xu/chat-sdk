@@ -1,6 +1,7 @@
 package com.rance.im.ssl;
 
-import com.forgetsky.wanandroid.app.WanAndroidApp;
+
+import com.rance.IMApplication;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -88,7 +89,7 @@ public final class SslTwoWayContextFactory {
         try {
             KeyManagerFactory kmf = null;
             KeyStore ks = KeyStore.getInstance("BKS");
-            in = WanAndroidApp.getContext().getAssets().open("ssl/android_client.bks");
+            in = IMApplication.getInstance().getAssets().open("ssl/android_client.bks");
 
             ks.load(in, PASSWORD.toCharArray());
             kmf = KeyManagerFactory.getInstance("X509");
@@ -96,7 +97,7 @@ public final class SslTwoWayContextFactory {
 
             TrustManagerFactory tf = null;
             KeyStore tks = KeyStore.getInstance("BKS");
-            tIN = WanAndroidApp.getContext().getAssets().open("ssl/android_client.bks");
+            tIN = IMApplication.getInstance().getAssets().open("ssl/android_client.bks");
             tks.load(tIN, PASSWORD.toCharArray());
             tf = TrustManagerFactory.getInstance("X509");
             tf.init(tks);

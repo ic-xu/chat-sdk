@@ -20,7 +20,6 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import androidx.annotation.RequiresApi;
 import androidx.viewpager.widget.ViewPager;
 
 import com.rance.chatui.R;
@@ -29,6 +28,8 @@ import com.rance.chatui.util.AudioRecorderUtils;
 import com.rance.chatui.util.Constants;
 import com.rance.chatui.util.PopupWindowFactory;
 import com.rance.chatui.util.Utils;
+import com.rance.im.BaseMessage;
+import com.rance.im.netty.NettyTcpClient;
 
 import org.simple.eventbus.EventBus;
 
@@ -77,22 +78,14 @@ public class EmotionInputDetector {
     public EmotionInputDetector bindToEditText(EditText editText) {
         mEditText = editText;
         mEditText.requestFocus();
-        mEditText.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                if (event.getAction() == MotionEvent.ACTION_UP && mEmotionLayout.isShown()) {
-                    lockContentHeight();
-                    hideEmotionLayout(true);
+        mEditText.setOnTouchListener((v, event) -> {
+            if (event.getAction() == MotionEvent.ACTION_UP && mEmotionLayout.isShown()) {
+                lockContentHeight();
+                hideEmotionLayout(true);
 
-                    mEditText.postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            unlockContentHeightDelayed();
-                        }
-                    }, 200L);
-                }
-                return false;
+                mEditText.postDelayed(() -> unlockContentHeightDelayed(), 200L);
             }
+            return false;
         });
 
         mEditText.addTextChangedListener(new TextWatcher() {
@@ -122,31 +115,28 @@ public class EmotionInputDetector {
     }
 
     public EmotionInputDetector bindToEmotionButton(View emotionButton) {
-        emotionButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (mEmotionLayout.isShown()) {
-                    if (isShowAdd) {
-                        mViewPager.setCurrentItem(0);
-                        isShowEmotion = true;
-                        isShowAdd = false;
-                    } else {
-                        lockContentHeight();
-                        hideEmotionLayout(true);
-                        isShowEmotion = false;
-                        unlockContentHeightDelayed();
-                    }
-                } else {
-                    if (isSoftInputShown()) {
-                        lockContentHeight();
-                        showEmotionLayout();
-                        unlockContentHeightDelayed();
-                    } else {
-                        showEmotionLayout();
-                    }
+        emotionButton.setOnClickListener(v -> {
+            if (mEmotionLayout.isShown()) {
+                if (isShowAdd) {
                     mViewPager.setCurrentItem(0);
                     isShowEmotion = true;
+                    isShowAdd = false;
+                } else {
+                    lockContentHeight();
+                    hideEmotionLayout(true);
+                    isShowEmotion = false;
+                    unlockContentHeightDelayed();
                 }
+            } else {
+                if (isSoftInputShown()) {
+                    lockContentHeight();
+                    showEmotionLayout();
+                    unlockContentHeightDelayed();
+                } else {
+                    showEmotionLayout();
+                }
+                mViewPager.setCurrentItem(0);
+                isShowEmotion = true;
             }
         });
         return this;
@@ -154,31 +144,28 @@ public class EmotionInputDetector {
 
     public EmotionInputDetector bindToAddButton(View addButton) {
         mAddButton = addButton;
-        addButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (mEmotionLayout.isShown()) {
-                    if (isShowEmotion) {
-                        mViewPager.setCurrentItem(1);
-                        isShowAdd = true;
-                        isShowEmotion = false;
-                    } else {
-                        lockContentHeight();
-                        hideEmotionLayout(true);
-                        isShowAdd = false;
-                        unlockContentHeightDelayed();
-                    }
-                } else {
-                    if (isSoftInputShown()) {
-                        lockContentHeight();
-                        showEmotionLayout();
-                        unlockContentHeightDelayed();
-                    } else {
-                        showEmotionLayout();
-                    }
+        addButton.setOnClickListener(v -> {
+            if (mEmotionLayout.isShown()) {
+                if (isShowEmotion) {
                     mViewPager.setCurrentItem(1);
                     isShowAdd = true;
+                    isShowEmotion = false;
+                } else {
+                    lockContentHeight();
+                    hideEmotionLayout(true);
+                    isShowAdd = false;
+                    unlockContentHeightDelayed();
                 }
+            } else {
+                if (isSoftInputShown()) {
+                    lockContentHeight();
+                    showEmotionLayout();
+                    unlockContentHeightDelayed();
+                } else {
+                    showEmotionLayout();
+                }
+                mViewPager.setCurrentItem(1);
+                isShowAdd = true;
             }
         });
         return this;
@@ -186,89 +173,78 @@ public class EmotionInputDetector {
 
     public EmotionInputDetector bindToSendButton(View sendButton) {
         mSendButton = sendButton;
-        sendButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mAddButton.setVisibility(View.VISIBLE);
-                mSendButton.setVisibility(View.GONE);
-                MessageInfo messageInfo = new MessageInfo();
-                messageInfo.setContent(mEditText.getText().toString());
-                messageInfo.setFileType(Constants.CHAT_FILE_TYPE_TEXT);
-                EventBus.getDefault().post(messageInfo);
-                mEditText.setText("");
-            }
+        sendButton.setOnClickListener(view -> {
+            mAddButton.setVisibility(View.VISIBLE);
+            mSendButton.setVisibility(View.GONE);
+            MessageInfo messageInfo = new MessageInfo();
+            messageInfo.setContent(mEditText.getText().toString());
+            messageInfo.setFileType(Constants.CHAT_FILE_TYPE_TEXT);
+            EventBus.getDefault().post(messageInfo);
+            mEditText.setText("");
         });
         return this;
     }
 
     public EmotionInputDetector bindToVoiceButton(final ImageView voiceButton) {
-        voiceButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (isShowVoice) {
-                    voiceButton.setImageResource(R.mipmap.icon_voice);
-                } else {
-                    voiceButton.setImageResource(R.mipmap.icon_keyboard);
+        voiceButton.setOnClickListener(v -> {
+            if (isShowVoice) {
+                voiceButton.setImageResource(R.mipmap.icon_voice);
+            } else {
+                voiceButton.setImageResource(R.mipmap.icon_keyboard);
 
-                }
-
-                isShowVoice = !isShowVoice;
-
-                hideEmotionLayout(false);
-                hideSoftInput();
-                mVoiceText.setVisibility(mVoiceText.getVisibility() == View.GONE ? View.VISIBLE : View.GONE);
-                mEditText.setVisibility(mVoiceText.getVisibility() == View.GONE ? View.VISIBLE : View.GONE);
             }
+            isShowVoice = !isShowVoice;
+            hideEmotionLayout(false);
+            hideSoftInput();
+            mVoiceText.setVisibility(mVoiceText.getVisibility() == View.GONE ? View.VISIBLE : View.GONE);
+            mEditText.setVisibility(mVoiceText.getVisibility() == View.GONE ? View.VISIBLE : View.GONE);
         });
         return this;
     }
 
     public EmotionInputDetector bindToVoiceText(TextView voiceText) {
         mVoiceText = voiceText;
-        mVoiceText.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                // 获得x轴坐标
-                int x = (int) event.getX();
-                // 获得y轴坐标
-                int y = (int) event.getY();
+        mVoiceText.setOnTouchListener((v, event) -> {
+            // 获得x轴坐标
+            int x = (int) event.getX();
+            // 获得y轴坐标
+            int y = (int) event.getY();
 
-                switch (event.getAction()) {
-                    case MotionEvent.ACTION_DOWN:
-                        mVoicePop.showAtLocation(v, Gravity.CENTER, 0, 0);
+            switch (event.getAction()) {
+                case MotionEvent.ACTION_DOWN:
+                    mVoicePop.showAtLocation(v, Gravity.CENTER, 0, 0);
+                    mVoiceText.setText("松开结束");
+                    mPopVoiceText.setText("手指上滑，取消发送");
+                    mVoiceText.setTag("1");
+                    mAudioRecorderUtils.startRecord(mActivity);
+                    break;
+                case MotionEvent.ACTION_MOVE:
+                    if (wantToCancel(x, y)) {
+                        mVoiceText.setText("松开结束");
+                        mPopVoiceText.setText("松开手指，取消发送");
+                        mVoiceText.setTag("2");
+                    } else {
                         mVoiceText.setText("松开结束");
                         mPopVoiceText.setText("手指上滑，取消发送");
                         mVoiceText.setTag("1");
-                        mAudioRecorderUtils.startRecord(mActivity);
-                        break;
-                    case MotionEvent.ACTION_MOVE:
-                        if (wantToCancel(x, y)) {
-                            mVoiceText.setText("松开结束");
-                            mPopVoiceText.setText("松开手指，取消发送");
-                            mVoiceText.setTag("2");
-                        } else {
-                            mVoiceText.setText("松开结束");
-                            mPopVoiceText.setText("手指上滑，取消发送");
-                            mVoiceText.setTag("1");
-                        }
-                        break;
-                    case MotionEvent.ACTION_UP:
-                        mVoicePop.dismiss();
-                        if (mVoiceText.getTag().equals("2")) {
-                            //取消录音（删除录音文件）
-                            mAudioRecorderUtils.cancelRecord();
-                        } else {
-                            //结束录音（保存录音文件）
-                            mAudioRecorderUtils.stopRecord();
-                        }
-                        mVoiceText.setText("按住说话");
-                        mVoiceText.setTag("3");
-                        mVoiceText.setVisibility(View.GONE);
-                        mEditText.setVisibility(View.VISIBLE);
-                        break;
-                }
-                return true;
+                    }
+                    break;
+                case MotionEvent.ACTION_UP:
+                    mVoicePop.dismiss();
+                    if (mVoiceText.getTag().equals("2")) {
+                        //取消录音（删除录音文件）
+                        mAudioRecorderUtils.cancelRecord();
+                    } else {
+                        //结束录音（保存录音文件）
+                        mAudioRecorderUtils.stopRecord();
+                    }
+                    mVoiceText.setText("按住说话");
+                    mVoiceText.setTag("3");
+                    mVoiceText.setVisibility(View.GONE);
+                    mEditText.setVisibility(View.VISIBLE);
+                    break;
             }
+            return true;
         });
         return this;
     }
@@ -307,9 +283,9 @@ public class EmotionInputDetector {
         mVoicePop = new PopupWindowFactory(mActivity, view);
 
         //PopupWindow布局文件里面的控件
-        final ImageView mImageView = (ImageView) view.findViewById(R.id.iv_recording_icon);
-        final TextView mTextView = (TextView) view.findViewById(R.id.tv_recording_time);
-        mPopVoiceText = (TextView) view.findViewById(R.id.tv_recording_text);
+        final ImageView mImageView = view.findViewById(R.id.iv_recording_icon);
+        final TextView mTextView = view.findViewById(R.id.tv_recording_time);
+        mPopVoiceText = view.findViewById(R.id.tv_recording_text);
         //录音回调
         mAudioRecorderUtils.setOnAudioStatusUpdateListener(new AudioRecorderUtils.OnAudioStatusUpdateListener() {
 
@@ -374,26 +350,16 @@ public class EmotionInputDetector {
     }
 
     private void unlockContentHeightDelayed() {
-        mEditText.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                ((LinearLayout.LayoutParams) mContentView.getLayoutParams()).weight = 1.0F;
-            }
-        }, 200L);
+        mEditText.postDelayed(() -> ((LinearLayout.LayoutParams) mContentView.getLayoutParams()).weight = 1.0F, 200L);
     }
 
     private void showSoftInput() {
         mEditText.requestFocus();
-        mEditText.post(new Runnable() {
-            @Override
-            public void run() {
-                mInputManager.showSoftInput(mEditText, 0);
-            }
-        });
+        mEditText.post(() -> mInputManager.showSoftInput(mEditText, 0));
     }
 
     public void hideSoftInput() {
-            mInputManager.hideSoftInputFromWindow(mEditText.getWindowToken(), 0);
+        mInputManager.hideSoftInputFromWindow(mEditText.getWindowToken(), 0);
     }
 
     private boolean isSoftInputShown() {
@@ -401,7 +367,7 @@ public class EmotionInputDetector {
     }
 
     private int getSupportSoftInputHeight() {
-        if(0!=softKeyboardHeight)
+        if (0 != softKeyboardHeight)
             sp.edit().putInt(SHARE_PREFERENCE_TAG, softKeyboardHeight);
         return softKeyboardHeight;
     }
@@ -445,8 +411,7 @@ public class EmotionInputDetector {
         }
     }
 
-
-    public void destory(){
+    public void destory() {
         mActivity.getWindow().getDecorView().getViewTreeObserver().removeOnGlobalLayoutListener(mGlobalLayoutListener);
     }
 

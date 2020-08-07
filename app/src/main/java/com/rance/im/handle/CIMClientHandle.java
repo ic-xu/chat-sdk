@@ -2,8 +2,8 @@ package com.rance.im.handle;
 
 import android.util.Log;
 
+import com.rance.chatui.util.Constants;
 import com.rance.im.BaseMessage;
-import com.rance.im.config.Constants;
 import com.rance.im.message.P2chatMessage;
 import com.rance.im.message.ShutDownMsg;
 import com.rance.im.netty.NettyTcpClient;

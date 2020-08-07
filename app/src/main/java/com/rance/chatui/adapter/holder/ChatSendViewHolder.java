@@ -17,6 +17,7 @@ import androidx.core.content.ContextCompat;
 import com.bumptech.glide.Glide;
 import com.rance.chatui.R;
 import com.rance.chatui.adapter.ChatAdapter;
+import com.rance.chatui.adapter.ChatTimeShow;
 import com.rance.chatui.enity.IMContact;
 import com.rance.chatui.enity.Link;
 import com.rance.chatui.enity.MessageInfo;
@@ -26,6 +27,8 @@ import com.rance.chatui.util.Utils;
 import com.rance.chatui.widget.BubbleImageView;
 import com.rance.chatui.widget.BubbleLinearLayout;
 import com.rance.chatui.widget.GifTextView;
+
+import io.netty.util.internal.StringUtil;
 
 /**
  * 作者：Rance on 2016/11/29 10:47
@@ -98,14 +101,9 @@ public class ChatSendViewHolder extends BaseViewHolder<MessageInfo> {
 
     @Override
     public void setData(MessageInfo data) {
-        chatItemDate.setText(data.getTime() != null ? data.getTime() : "");
+        ChatTimeShow.getInstance().showTime(chatItemDate,data);
         Glide.with(mContext).load(data.getHeader()).into(chatItemHeader);
-        chatItemHeader.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                onItemClickListener.onHeaderClick((Integer) itemView.getTag());
-            }
-        });
+        chatItemHeader.setOnClickListener(v -> onItemClickListener.onHeaderClick((Integer) itemView.getTag()));
         switch (data.getFileType()) {
             case Constants.CHAT_FILE_TYPE_TEXT:
                 chatItemContentText.setSpanText(handler, data.getContent(), true);
@@ -207,10 +205,9 @@ public class ChatSendViewHolder extends BaseViewHolder<MessageInfo> {
 
                 chatItemLayoutContact.setVisibility(View.VISIBLE);
 
-                IMContact imContact = (IMContact) data.getObject();
-                tvContactSurname.setText(imContact.getSurname());
-                tvContactName.setText(imContact.getName());
-                tvContactPhone.setText(imContact.getPhonenumber());
+                tvContactSurname.setText(data.getSurname());
+                tvContactName.setText(data.getName());
+                tvContactPhone.setText(data.getPhonenumber());
                 break;
             case Constants.CHAT_FILE_TYPE_LINK:
                 chatItemVoice.setVisibility(View.GONE);
@@ -222,11 +219,9 @@ public class ChatSendViewHolder extends BaseViewHolder<MessageInfo> {
                 chatItemLayoutContact.setVisibility(View.GONE);
 
                 chatItemLayoutLink.setVisibility(View.VISIBLE);
-                Link link = (Link) data.getObject();
-
-                tvLinkSubject.setText(link.getSubject());
-                tvLinkText.setText(link.getText());
-                Glide.with(mContext).load(link.getStream()).into(ivLinkPicture);
+                tvLinkSubject.setText(data.getSubject());
+                tvLinkText.setText(data.getText());
+                Glide.with(mContext).load(data.getStream()).into(ivLinkPicture);
                 break;
         }
         switch (data.getSendState()) {

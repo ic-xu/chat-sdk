@@ -1,9 +1,9 @@
 package com.rance.im.netty;
 
-import com.forgetsky.wanandroid.im.BaseMessage;
-import com.forgetsky.wanandroid.im.config.IMSConfig;
-import com.forgetsky.wanandroid.im.handle.CIMClientHandle;
-import com.forgetsky.wanandroid.im.ssl.SslTwoWayContextFactory;
+import com.rance.im.BaseMessage;
+import com.rance.im.config.IMSConfig;
+import com.rance.im.handle.CIMClientHandle;
+import com.rance.im.ssl.SslTwoWayContextFactory;
 
 import java.util.concurrent.TimeUnit;
 

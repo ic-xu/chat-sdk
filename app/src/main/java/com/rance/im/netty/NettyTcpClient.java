@@ -4,13 +4,13 @@ package com.rance.im.netty;
 import android.annotation.SuppressLint;
 
 import com.rance.IMApplication;
+import com.rance.chatui.util.Constants;
 import com.rance.im.BaseMessage;
 import com.rance.im.ExecutorServiceFactory;
 import com.rance.im.IMSConnectStatusListener;
 import com.rance.im.MsgTimeoutTimerManager;
 import com.rance.im.base.interf.IMSClientInterface;
 import com.rance.im.base.listener.IMSConnectStatusCallback;
-import com.rance.im.config.Constants;
 import com.rance.im.config.IMSConfig;
 import com.rance.im.handle.CIMClientHandle;
 import com.rance.im.utils.NetWorkUtils;

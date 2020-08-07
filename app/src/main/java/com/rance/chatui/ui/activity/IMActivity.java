@@ -2,11 +2,11 @@ package com.rance.chatui.ui.activity;
 
 import android.content.Intent;
 import android.graphics.drawable.AnimationDrawable;
-import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -20,12 +20,12 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.alibaba.fastjson.JSON;
 import com.labo.kaji.relativepopupwindow.RelativePopupWindow;
 import com.rance.chatui.R;
 import com.rance.chatui.adapter.ChatAdapter;
 import com.rance.chatui.adapter.CommonFragmentPagerAdapter;
 import com.rance.chatui.enity.FullImageInfo;
-import com.rance.chatui.enity.Link;
 import com.rance.chatui.enity.MessageInfo;
 import com.rance.chatui.ui.fragment.ChatEmotionFragment;
 import com.rance.chatui.ui.fragment.ChatFunctionFragment;
@@ -38,6 +38,8 @@ import com.rance.chatui.widget.EmotionInputDetector;
 import com.rance.chatui.widget.NoScrollViewPager;
 import com.rance.chatui.widget.StateButton;
 import com.rance.im.BaseMessage;
+import com.rance.im.message.P2chatMessage;
+import com.rance.im.message.PMessage;
 import com.rance.im.netty.NettyTcpClient;
 
 import org.simple.eventbus.EventBus;
@@ -47,6 +49,7 @@ import org.simple.eventbus.ThreadMode;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 
 /**
@@ -235,8 +238,7 @@ public class IMActivity extends AppCompatActivity {
         @Override
         public void onLinkClick(View view, int position) {
             MessageInfo messageInfo = messageInfos.get(position);
-            Link link = (Link) messageInfo.getObject();
-            Uri uri = Uri.parse(link.getUrl());
+            Uri uri = Uri.parse(messageInfo.getUrl());
             Intent intent = new Intent(Intent.ACTION_VIEW, uri);
             startActivity(intent);
         }
@@ -290,6 +292,7 @@ public class IMActivity extends AppCompatActivity {
         messageInfo.setContent("你好，欢迎使用Rance的聊天界面框架");
         messageInfo.setFileType(Constants.CHAT_FILE_TYPE_TEXT);
         messageInfo.setType(Constants.CHAT_ITEM_TYPE_LEFT);
+        messageInfo.setTime(System.currentTimeMillis());
         messageInfo.setHeader("http://img0.imgtn.bdimg.com/it/u=401967138,750679164&fm=26&gp=0.jpg");
         messageInfos.add(messageInfo);
 
@@ -298,6 +301,7 @@ public class IMActivity extends AppCompatActivity {
         messageInfo1.setVoiceTime(3000);
         messageInfo1.setFileType(Constants.CHAT_FILE_TYPE_VOICE);
         messageInfo1.setType(Constants.CHAT_ITEM_TYPE_RIGHT);
+        messageInfo1.setTime(System.currentTimeMillis());
         messageInfo1.setSendState(Constants.CHAT_ITEM_SEND_SUCCESS);
         messageInfo1.setHeader("http://img.dongqiudi.com/uploads/avatar/2014/10/20/8MCTb0WBFG_thumb_1413805282863.jpg");
         messageInfos.add(messageInfo1);
@@ -306,6 +310,7 @@ public class IMActivity extends AppCompatActivity {
         messageInfo2.setFilepath("http://img4.imgtn.bdimg.com/it/u=1800788429,176707229&fm=21&gp=0.jpg");
         messageInfo2.setFileType(Constants.CHAT_FILE_TYPE_IMAGE);
         messageInfo2.setType(Constants.CHAT_ITEM_TYPE_LEFT);
+        messageInfo2.setTime(1278496458000L);
         messageInfo2.setHeader("http://img0.imgtn.bdimg.com/it/u=401967138,750679164&fm=26&gp=0.jpg");
         messageInfos.add(messageInfo2);
 
@@ -313,6 +318,7 @@ public class IMActivity extends AppCompatActivity {
         messageInfo3.setContent("[微笑][色][色][色]");
         messageInfo3.setFileType(Constants.CHAT_FILE_TYPE_TEXT);
         messageInfo3.setType(Constants.CHAT_ITEM_TYPE_RIGHT);
+        messageInfo3.setTime(1283853258000L+70000);
         messageInfo3.setSendState(Constants.CHAT_ITEM_SEND_ERROR);
         messageInfo3.setHeader("http://img.dongqiudi.com/uploads/avatar/2014/10/20/8MCTb0WBFG_thumb_1413805282863.jpg");
         messageInfos.add(messageInfo3);
@@ -330,23 +336,39 @@ public class IMActivity extends AppCompatActivity {
         chatAdapter.notifyItemInserted(messageInfos.size() - 1);
 //        chatAdapter.add(messageInfo);
         chatList.scrollToPosition(chatAdapter.getItemCount() - 1);
-        new Handler().postDelayed(new Runnable() {
-            public void run() {
-                messageInfo.setSendState(Constants.CHAT_ITEM_SEND_SUCCESS);
-                chatAdapter.notifyDataSetChanged();
-            }
+        //设置 messageId
+        messageInfo.setMsgId(UUID.randomUUID().getLeastSignificantBits());
+
+        //TODO 发送消息到服务器
+        String messageBody = JSON.toJSONString(messageInfo);
+        BaseMessage.Message msg = BaseMessage.Message
+                .newBuilder()
+                .setSerialType(false)
+                .setText(messageBody)
+                .setId(messageInfo.getMsgId())
+                .setToUserId(Constants.user.getId())
+                .setUser(Constants.user)
+                .build();
+
+        NettyTcpClient.getInstance().sendMsg(msg);
+
+
+        //TODO 模拟更新信息状态
+        new Handler().postDelayed(() -> {
+            messageInfo.setSendState(Constants.CHAT_ITEM_SEND_SUCCESS);
+            chatAdapter.notifyDataSetChanged();
         }, 2000);
-        new Handler().postDelayed(new Runnable() {
-            public void run() {
-                MessageInfo message = new MessageInfo();
-                message.setContent("这是模拟消息回复");
-                message.setType(Constants.CHAT_ITEM_TYPE_LEFT);
-                message.setFileType(Constants.CHAT_FILE_TYPE_TEXT);
-                message.setHeader("http://img0.imgtn.bdimg.com/it/u=401967138,750679164&fm=26&gp=0.jpg");
-                messageInfos.add(message);
-                chatAdapter.notifyItemInserted(messageInfos.size() - 1);
-                chatList.scrollToPosition(chatAdapter.getItemCount() - 1);
-            }
+
+        //TODO 模拟受到信息状态
+        new Handler().postDelayed(() -> {
+            MessageInfo message = new MessageInfo();
+            message.setContent("这是模拟消息回复");
+            message.setType(Constants.CHAT_ITEM_TYPE_LEFT);
+            message.setFileType(Constants.CHAT_FILE_TYPE_TEXT);
+            message.setHeader("http://img0.imgtn.bdimg.com/it/u=401967138,750679164&fm=26&gp=0.jpg");
+            messageInfos.add(message);
+            chatAdapter.notifyItemInserted(messageInfos.size() - 1);
+            chatList.scrollToPosition(chatAdapter.getItemCount() - 1);
         }, 3000);
     }
 
@@ -366,8 +388,27 @@ public class IMActivity extends AppCompatActivity {
     }
 
 
-    //TODO 发送消息到服务器
-    private void sendMessage(BaseMessage.Message msg){
-        NettyTcpClient.getInstance().sendMsg(msg);
+    @Subscriber(mode = ThreadMode.MAIN)
+    private void onMessage(P2chatMessage message) {
+        Log.w(TAG, "onMessage: " + message.getMessage().getText());
+        MessageInfo myMessage;
+        switch (message.getMessage().getType()) {
+            case Constants.CommandType.PUSH:
+                PMessage pMessage = JSON.parseObject(message.getMessage().getText(), PMessage.class);
+                break;
+            case Constants.CommandType.MSG:
+                myMessage = JSON.parseObject(message.getMessage().getText(), MessageInfo.class);
+                chatAdapter.add(myMessage);
+                chatAdapter.notifyDataSetChanged();
+                saveMessage(myMessage);
+                break;
+            case Constants.CommandType.MSG_PIC:
+            case Constants.CommandType.MSG_VIDEO:
+                break;
+        }
+
+    }
+
+    public void saveMessage(MessageInfo message) {
     }
 }

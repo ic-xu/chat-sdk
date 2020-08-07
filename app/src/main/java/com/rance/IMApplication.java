@@ -4,6 +4,8 @@ import android.app.Application;
 import android.content.Context;
 import android.util.DisplayMetrics;
 
+import androidx.multidex.MultiDex;
+
 /**
  * 作者：Rance on 2016/12/20 16:49
  * 邮箱：rance935@163.com
@@ -30,6 +32,7 @@ public class IMApplication extends Application {
         mContext = getApplicationContext();
         mInstance = this;
         initScreenSize();
+        MultiDex.install(this);
     }
 
     public static Context getInstance() {

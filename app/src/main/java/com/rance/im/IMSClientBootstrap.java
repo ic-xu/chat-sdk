@@ -3,8 +3,8 @@ package com.rance.im;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.forgetsky.wanandroid.im.base.interf.IMSClientInterface;
-import com.forgetsky.wanandroid.im.netty.NettyTcpClient;
+import com.rance.im.base.interf.IMSClientInterface;
+import com.rance.im.netty.NettyTcpClient;
 
 import java.util.Vector;
 

@@ -8,8 +8,7 @@ import android.util.Log;
 
 import com.rance.chatui.enity.Link;
 import com.rance.chatui.enity.MessageInfo;
-
-import org.greenrobot.eventbus.EventBus;
+import org.simple.eventbus.EventBus;
 
 /**
  * Created by chengz
@@ -63,12 +62,10 @@ public class MessageCenter {
                     MessageInfo messageInfo = new MessageInfo();
                     messageInfo.setMimeType(mimeType);
                     messageInfo.setFileType(Constants.CHAT_FILE_TYPE_LINK);
-                    Link link = new Link();
-                    link.setSubject(bundle.getString(Intent.EXTRA_SUBJECT));
-                    link.setText(bundle.getString(Intent.EXTRA_TEXT));
-                    link.setStream(bundle.get(Intent.EXTRA_STREAM).toString());
-                    link.setUrl(bundle.getString("url"));
-                    messageInfo.setObject(link);
+                    messageInfo.setSubject(bundle.getString(Intent.EXTRA_SUBJECT));
+                    messageInfo.setText(bundle.getString(Intent.EXTRA_TEXT));
+                    messageInfo.setStream(bundle.get(Intent.EXTRA_STREAM).toString());
+                    messageInfo.setUrl(bundle.getString("url"));
                     EventBus.getDefault().post(messageInfo);
                 } else {
                     // image
